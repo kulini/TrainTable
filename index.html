@@ -6,12 +6,6 @@
 	<!-- Latest compiled and minified CSS & JS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
-	<script src="https://code.jquery.com/jquery.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
-	<!-- moment.js CDN for calculating time in javascript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.0/moment.min.js"></script>
-
     <style>
     	.mywell {
     		background-color: #42afca;
@@ -26,6 +20,7 @@
 				<i class="fa fa-train"></i>
 				All aboard! 
 			</h2>
+			<h4 id="headerTime"></h4>
 		</div>
 	</div>
 	<div class="row">
@@ -65,9 +60,9 @@
 				<input type="text" id="trainName" class="form-control"><br>
 				<label for="destination">Destination</label>
 				<input type="text" id="destination" class="form-control"><br>
-				<label for="firstTrainTime">First Train Time (enter in military time, e.g. 2:30PM is 14:30)</label>
+				<label for="firstTrainTime">First Train Time (military time, HH:mm. e.g. 2:30PM is 14:30)</label>
 				<input type="text" id="firstTrainTime" class="form-control"><br>
-				<label for="frequency">Frequency</label>
+				<label for="frequency">Frequency (minutes)</label>
 				<input type="text" id="frequency" class="form-control"><br>
 				<button id="submitBtn" type="submit" class="btn-primary btn">Submit</button>
 			</div>
@@ -75,8 +70,14 @@
 	</div>
 </div>
 
+<script src="https://code.jquery.com/jquery.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
+<!-- moment.js CDN for calculating time in javascript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.0/moment.min.js"></script>
+
 <script>
-  // Initialize Firebase
+// Initialize Firebase
 var config = {
 apiKey: "AIzaSyB6G5uduex9bGt2N9oRZOh_xQXkADI11Ik",
 authDomain: "traintimetable-a89a2.firebaseapp.com",
@@ -89,6 +90,17 @@ firebase.initializeApp(config);
 //Assigns the firebase database to a variable
 var database = firebase.database();
 
+//Displays the current time in the header, using moment.js library
+
+function updateTime(){
+	var now = moment(new Date());
+	now = moment(now).format('HH:mm:ss A');
+	$('#headerTime').text('Current time is: ' + now);
+}
+
+setInterval(updateTime, 1000);
+
+
 //When user submits the data,
 $('#submitBtn').on('click', function() {
 
@@ -97,8 +109,6 @@ $('#submitBtn').on('click', function() {
 	var destination = $('#destination').val().trim();
 	var firstTrainTime = $('#firstTrainTime').val().trim();
 	var frequency = $('#frequency').val().trim();
-
-	// console.log(trainName);
 
 	//Create a new object that will be pushed to Firebase.
 	var newTrain = {
@@ -131,8 +141,7 @@ database.ref().on('child_added', function(childSnapshot){
 	var fbFreq = childSnapshot.val().freq;
 
 
-	//In the following section, moment.js is used to manipulate fbFirstTrain, the time entered by the user, 
-	//to temporal data used by the program
+	//In the following section, moment.js library is used to manipulate fbFirstTrain, the time entered by the user, to temporal data used by the program
 
 	//Use moment.js to get current time
 	var currentTime = moment(new Date());
@@ -141,6 +150,16 @@ database.ref().on('child_added', function(childSnapshot){
 	var startHour = fbFirstTrain.substring(0,2);
 	//the minute characters are extracted
 	var startMinutes = fbFirstTrain.substring(3);
+	//The same is done for current hour and minutes for the case that current time is before the first train
+	var currentTimeFormatted = moment(currentTime).format('HH:mm');
+	var currentHour = currentTimeFormatted.substring(0,2);
+	var currentMinutes = currentTimeFormatted.substring(3);
+
+	//Calculate the total number of minutes elapsed since midnight for current time, then
+	//Calculate the departure time, in minutes elapsed after midnight, for the first train of the day.
+	var totalCurrentMins = parseInt(currentHour*60) + parseInt(currentMinutes);
+	var totalFirstTrainMins = parseInt(startHour) + parseInt(startMinutes);
+
 
 	//Start with the current date and time for start time of the train
 	var startTime = moment(new Date());
@@ -148,6 +167,7 @@ database.ref().on('child_added', function(childSnapshot){
 	startTime = moment(startTime).set('hour', startHour);
 	//then set the minute to that of the first train
 	startTime = moment(startTime).set('minute', startMinutes);
+	
 
 	//The following subsection involves calculating the time from now until the next train.
 	//timeDiff is the time lapsed, in minutes, between now and the first train of the day.
@@ -156,10 +176,15 @@ database.ref().on('child_added', function(childSnapshot){
 	var remainder = timeDiff % fbFreq;
 	//The number of minutes until the next train is derived by subtracting remainder from the frequency of the train. e.g. if a train comes every 30 minutes and 11 minutes have elapsed since the last train, the next train will arrive in 19 minutes, which is assigned to minutesAway.
 	var minutesAway = fbFreq - remainder;
+	//But if the first train hasn't departed yet, minutesAway is the difference between current time and first train departure
+	if ( totalFirstTrainMins > totalCurrentMins){
+		minutesAway = totalFirstTrainMins = totalCurrentMins;
+	}
 	//The time of next train's arrival is simply minutesAway added to the current time(currentTime)
 	var nextArrival = moment(currentTime).add(minutesAway, 'minutes');
+
 	//formatted for the HTML table
-	nextArrival = moment(nextArrival).format('HH:mm');
+	nextArrival = moment(nextArrival).format('HH:mm	 A');
 	//END of section on time-related code
 
 	//Dump newly pushed Firebase data to HTML
@@ -168,16 +193,14 @@ database.ref().on('child_added', function(childSnapshot){
 		'<td>' + fbName + '</td>' +
 		'<td>' + fbDestin + '</td>' +
 		'<td>' + fbFreq + '</td>' +
-		'<td>' + nextArrival + '</td>' +		
-		'<td>' + minutesAway + '</td>' + 
+		'<td id="nextArrival">' + nextArrival + '</td>' +		
+		'<td id="minutesAway">' + minutesAway + '</td>' + 
 		'</tr>'
-		);
+	);
+
 })
 
-//Updates the page every minute
-setInterval(function(){
-	   window.location.reload(1);
-	}, 1000 * 60);
+
 </script>	
 </body>
 </html>
