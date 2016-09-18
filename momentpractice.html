@@ -67,7 +67,8 @@
 </div>
 
 <script>
-  // Initialize Firebase
+
+// Initialize Firebase
 var config = {
 apiKey: "AIzaSyB6G5uduex9bGt2N9oRZOh_xQXkADI11Ik",
 authDomain: "traintimetable-a89a2.firebaseapp.com",
@@ -81,6 +82,7 @@ firebase.initializeApp(config);
 var database = firebase.database();
 
 var currentTime = moment(new Date());
+
 // alert(currentTime);
 var startTime = '12:30';
 
@@ -95,6 +97,8 @@ $('#submitBtn').on('click', function() {
 	var firstTrainTime = $('#firstTrainTime').val().trim();
 	var frequency = $('#frequency').val().trim();
 
+
+	console
 	// console.log(trainName);
 
 	//Create a new object that will be pushed to Firebase.
@@ -139,6 +143,7 @@ database.ref().on('child_added', function(childSnapshot){
 
 	// var startTime = moment(new Date(fbFirstTrain));
 	// // console.log('start time: ' + startTime);
+	
 
 	//Dumps newly pushed Firebase data to HTML
 	$('#trainTable > tbody').append(
@@ -149,7 +154,7 @@ database.ref().on('child_added', function(childSnapshot){
 		'<td>' + fbFirstTrain + '</td>' +
 		
 		'</tr>'
-		);
+	);
 })
 
 </script>	
