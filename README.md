@@ -4,7 +4,9 @@ https://kulini-train.herokuapp.com/
 #Screenshot:
 
 <p align="center">
-<img src="https://cloud.githubusercontent.com/assets/8959351/18646194/76d121de-7e7e-11e6-9fba-adc893990f60.png" width="100%" height="auto"/>
+<img src="
+https://cloud.githubusercontent.com/assets/8959351/18646632/6abfe98c-7e80-11e6-8252-fe4fa6f992bc.png
+" width="100%" height="auto"/>
 </p>
 
 #Description:
@@ -17,5 +19,6 @@ This app allows the user, from any computer in the world, to add a train to the 
 * Javascript
 * jQuery
 * Google fonts API
+* Font Awesome
 * HTML5
 * CSS3
