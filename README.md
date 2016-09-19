@@ -4,7 +4,7 @@ https://kulini-train.herokuapp.com/
 #Screenshot:
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/eric-h0/liveTrainTimes/screenshots/screenshots/1.png" width="100%" height="auto"/>
+<img src="https://cloud.githubusercontent.com/assets/8959351/18646194/76d121de-7e7e-11e6-9fba-adc893990f60.png" width="100%" height="auto"/>
 </p>
 
 #Description:
